@@ -1,4 +1,4 @@
-FROM nvidia/cuda:8.0-cudnn5-devel-ubuntu14.04
+FROM nvidia/cuda:8.0-cudnn6-devel-ubuntu16.04
 MAINTAINER Varun Suresh <fab.varun@gmail.com>
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -36,20 +36,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 ENV CTPN_ROOT=/opt
 WORKDIR $CTPN_ROOT
 
-# Missing "packaging" package
-RUN pip install --upgrade pip
-RUN pip install packaging
-
 RUN git clone --depth 1 https://github.com/gayathrimahalingam/CTPN.git
 WORKDIR $CTPN_ROOT/CTPN/caffe
 
 # Missing "packaging" package
 RUN pip install --upgrade pip && \
-    pip install packaging
-
-RUN cd python && for req in $(cat requirements.txt) pydot; do pip install $req; done && cd .. && \
+    pip install packaging && \
+    cd python && for req in $(cat requirements.txt) pydot; do pip install $req; done && cd .. && \
     git clone https://github.com/NVIDIA/nccl.git && \
-    cd nccl && make -j install && cd .. && rm -rf nccl 
+    cd nccl && make -j install && cd .. && rm -rf nccl && \
+    mkdir build && cd build && \
+    cmake -DUSE_CUDNN=1 -DUSE_NCCL=1 .. && \
+    make -j"$(nproc)"
 
 WORKDIR $CTPN_ROOT/CTPN/caffe
 
