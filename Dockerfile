@@ -30,6 +30,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         python-scipy && \
     rm -rf /var/lib/apt/lists/*
 
+#RUN cd /usr/lib/x86_64-linux-gnu && \
+#    sudo ln -s libhdf5_serial.so.8.0.2 libhdf5.so && \
+#    sudo ln -s libhdf5_serial_hl.so.8.0.2 libhdf5_hl.so
+
+
 ENV CTPN_ROOT=/opt
 WORKDIR $CTPN_ROOT
 
@@ -41,17 +46,17 @@ RUN git clone --depth 1 https://github.com/gayathrimahalingam/CTPN.git
 WORKDIR $CTPN_ROOT/CTPN/caffe
 
 # Missing "packaging" package
-RUN pip install --upgrade pip
-RUN pip install packaging
+RUN pip install --upgrade pip && \
+    pip install packaging
 
-RUN cd python && for req in $(cat requirements.txt) pydot; do pip install $req; done && cd ..
-RUN git clone https://github.com/NVIDIA/nccl.git 
-RUN cd nccl && make -j install && cd .. && rm -rf nccl 
+RUN cd python && for req in $(cat requirements.txt) pydot; do pip install $req; done && cd .. && \
+    git clone https://github.com/NVIDIA/nccl.git && \
+    cd nccl && make -j install && cd .. && rm -rf nccl 
 
 WORKDIR $CTPN_ROOT/CTPN/caffe
-RUN cp Makefile.config.example Makefile.config
-RUN mkdir build && cd build 
-RUN cmake -DUSE_CUDNN=1 -DUSE_NCCL=1 .. && \
+RUN cp Makefile.config.example Makefile.config && \
+    mkdir build && cd build && \
+    cmake -DUSE_NCCL=1 .. && \
     WITH_PYTHON_LAYER=1 make -j"$(nproc)" && make pycaffe
  
 
@@ -70,9 +75,9 @@ ENV PATH=$CTPN_ROOT/CTPN/caffe/build/tools:$PYCAFFE_ROOT:$PATH
 RUN echo "$CTPN_ROOT/CTPN/caffe/build/lib" >> /etc/ld.so.conf.d/caffe.conf && ldconfig
 
 # To make sure the python layer builds - Need to figure out a cleaner way to do this.
-RUN cp $CTPN_ROOT/CTPN/src/layers/* $CTPN_ROOT/CTPN/caffe/src/caffe/layers/
-RUN cp $CTPN_ROOT/CTPN/src/*.py $CTPN_ROOT/CTPN/caffe/src/caffe/
-RUN cp -r $CTPN_ROOT/CTPN/src/utils $CTPN_ROOT/CTPN/caffe/src/caffe/
+RUN cp $CTPN_ROOT/CTPN/src/layers/* $CTPN_ROOT/CTPN/caffe/src/caffe/layers/ && \
+    cp $CTPN_ROOT/CTPN/src/*.py $CTPN_ROOT/CTPN/caffe/src/caffe/ && \
+    cp -r $CTPN_ROOT/CTPN/src/utils $CTPN_ROOT/CTPN/caffe/src/caffe/
 
 # Install Opencv - 2.4.12 :
 
