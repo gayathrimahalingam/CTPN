@@ -16,6 +16,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libgflags-dev \
         libgoogle-glog-dev \
         libhdf5-serial-dev \
+        libhdf5-dev \
         libleveldb-dev \
         liblmdb-dev \
         libopencv-dev \
@@ -27,6 +28,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         python-numpy \
         python-pip \
         python-setuptools \
+        python-h5py \
         python-scipy && \
     rm -rf /var/lib/apt/lists/*
 
